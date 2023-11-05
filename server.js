@@ -1,12 +1,13 @@
 const path = require('path');
+
 const express = require('express')
 const dotenv = require('dotenv')
 const morgan = require('morgan')
+const cors = require('cors')
+const compression = require("compression");
 
 const dbConnection = require("./config/database")
-
 const mountRoute = require("./routes");
-
 const ApiError = require("./utils/apiError");
 const errorHandler = require("./middlewares/errorMiddleware");
 
@@ -20,6 +21,13 @@ dbConnection();
 
 // express
 const app = express()
+
+// cors
+app.use(cors())
+app.options('*', cors()) // include before other routes
+
+// compress all responses
+app.use(compression())
 
 // Middleware
 app.use(express.json())
