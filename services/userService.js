@@ -7,6 +7,8 @@ const factory = require('./handlerFactory');
 const ApiError = require('../utils/apiError');
 const { uploadSingleImage } = require('../middlewares/uploadImageMiddleware');
 const userModel = require('../models/userModel');
+const createToken = require('../utils/createToken')
+
 
 // Upload single image
 exports.uploadUserImage = uploadSingleImage('profileImg');
@@ -94,18 +96,60 @@ exports.deleteUser = factory.deleteOne(userModel);
 // @desc    Get Logged user data
 // @route   GET /api/v1/users/getMe
 // @access  Private/Protect
-
+exports.getLoggedUserData = asyncHandler(async (req, res, next) => {
+    req.params.id = req.user._id;
+    next();
+})
 
 // @desc    Update logged user password
 // @route   PUT /api/v1/users/updateMyPassword
 // @access  Private/Protect
+exports.updateLoggedUserPass = asyncHandler(async (req, res, next) => {
+    const user = await userModel.findByIdAndUpdate(
+        req.user._id,
+        {
+            password: await bcrypt.hash(req.body.password, 12),
+            passChangedAt: Date.now()
+        },
+        { new: true }
+    );
 
+    if (!user) {
+        return next(new ApiError(`No document for this id ${req.user._id}`, 404));
+    }
+
+    const token = createToken(user._id)
+
+    res.status(200).json({ data: user, token });
+});
 
 // @desc    Update logged user data (without password, role)
 // @route   PUT /api/v1/users/updateMe
 // @access  Private/Protect
+exports.updateLoggedUserData = asyncHandler(async (req, res, next) => {
+    const user = await userModel.findByIdAndUpdate(
+        req.user._id,
+        {
+            name: req.body.name,
+            slug: req.body.slug,
+            phone: req.body.phone,
+            email: req.body.email,
+        },
+        { new: true }
+    );
 
+    if (!user) {
+        return next(new ApiError(`No user for this id ${req.user._id}`, 404));
+    }
+    res.status(200).json({ data: user });
+});
 
 // @desc    Deactivate logged user
 // @route   DELETE /api/v1/users/deleteMe
 // @access  Private/Protect
+exports.deleteLoggedUserData = asyncHandler(async (req, res, next) => {
+    const user = await userModel.findByIdAndUpdate(req.user._id, { active: false })
+    // console.log(user)
+
+    res.status(204).json({ status: 'Success' });
+})

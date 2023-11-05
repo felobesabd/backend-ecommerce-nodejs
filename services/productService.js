@@ -57,7 +57,7 @@ exports.getProducts = factory.getAll(productModel, 'product')
 // @desc    Get specific category by id
 // @route   GET /api/v1/categories/:id
 // @access  Public
-exports.getProduct = factory.getOne(productModel)
+exports.getProduct = factory.getOne(productModel, 'reviews')
 
 // @desc    Create category
 // @route   POST  /api/v1/categories

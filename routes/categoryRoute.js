@@ -1,14 +1,5 @@
-const express = require('express');// The disk storage engine
-// const storage = multer.diskStorage({
-//     destination:  (req, file, cb) => {
-//         cb(null, 'uploads/categories')
-//     },
-//     filename: (req, file, cb) => {
-//         const ext = file.mimetype.split('/')[1];
-//         const fileName = `category-${uuidv4()}-${Date.now()}.${ext}`
-//         cb(null, fileName)
-//     }
-// })
+const express = require('express');
+
 const { categoryByIdValidator, createCategoryValidator,
     updateCategoryValidator, deleteCategoryValidator } = require("../utils/validator/categoryValidator");
 

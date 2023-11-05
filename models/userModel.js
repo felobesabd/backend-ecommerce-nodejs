@@ -28,6 +28,9 @@ const userSchema = new mongoose.Schema(
         },
 
         passChangedAt: Date,
+        passResetCode: String,
+        passResetExpired: Date,
+        passResetVerified: Boolean,
 
         role: {
             type: String,
@@ -38,12 +41,26 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
+        wishlist: [{
+            type: mongoose.Schema.ObjectId,
+            ref: 'product'
+        }],
+        addresses: [
+            {
+                id: { type: mongoose.Schema.Types.ObjectId },
+                alias: String,
+                details: String,
+                phone: String,
+                city: String,
+                postalCode: String,
+            },
+        ],
     },
     { timestamps: true }
 );
 
 userSchema.pre('save', async function (next) {
-    console.log('normal', this);
+    // console.log('normal', this);
     if (!this.isModified('password')) {
         return next()
     }
@@ -51,6 +68,6 @@ userSchema.pre('save', async function (next) {
     next();
 });
 
-const userModel = new mongoose.model('user', userSchema);
+const userModel = new mongoose.model('User', userSchema);
 
 module.exports = userModel;
