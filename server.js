@@ -5,6 +5,10 @@ const dotenv = require('dotenv')
 const morgan = require('morgan')
 const cors = require('cors')
 const compression = require("compression");
+const rateLimit = require("express-rate-limit");
+const hpp = require('hpp');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean')
 
 const dbConnection = require("./config/database")
 const mountRoute = require("./routes");
@@ -30,13 +34,33 @@ app.options('*', cors()) // include before other routes
 app.use(compression())
 
 // Middleware
-app.use(express.json())
+app.use(express.json({limit: '20kb'}))
+
 app.use(express.static(path.join(__dirname, 'uploads')))
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'))
     console.log(`mode: ${process.env.NODE_ENV}`)
 }
+
+//  middleware which sanitizes user-supplied data to prevent MongoDB Operator Injection.
+app.use(mongoSanitize());
+
+// make sure this comes before any routes
+app.use(xss()) // will return "&lt;script>&lt;/script>"
+
+// Use to limit repeated requests to public APIs and/or endpoints such as password
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 5,
+    message: `Too many requests have been made. Please try again after 15 minutes`
+})
+
+// Apply the rate limiting middleware to all requests.
+app.use('/api', limiter)
+
+// Add a second HPP middleware to apply the whitelist only to this route.
+app.use(hpp({ whitelist: ['price', 'sold', 'quantity', 'ratingsQuantity', 'ratingsAverage'] }));
 
 // Mount Routes
 mountRoute(app)
